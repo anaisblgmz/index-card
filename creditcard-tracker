@@ -1,0 +1,742 @@
+import React, { useState, useEffect, useMemo } from 'react';
+import { CreditCard, Check, Clock, AlertTriangle, RefreshCw, ChevronDown, ChevronUp, Sparkles, TrendingUp } from 'lucide-react';
+
+// ---------- CAT CHARACTERS ----------
+// Three cat personalities, each guiding different kinds of benefits.
+const CATS = {
+  // Sleepy tabby — the "easy money" cat. Passive benefits & autopilot perks.
+  napper: {
+    name: 'Gatito',
+    role: 'The Napper',
+    tagline: 'guards the easy wins',
+    svg: (size = 32) => (
+      <svg viewBox="0 0 100 100" width={size} height={size}>
+        {/* sleeping curled cat - tabby on the napper from img 1 */}
+        <ellipse cx="50" cy="68" rx="38" ry="22" fill="#f5f1e8"/>
+        <ellipse cx="35" cy="62" rx="14" ry="10" fill="#7a6d5e" opacity="0.5"/>
+        <ellipse cx="62" cy="70" rx="18" ry="12" fill="#f5f1e8"/>
+        {/* head tucked */}
+        <circle cx="38" cy="58" r="14" fill="#f5f1e8"/>
+        <path d="M 30 50 L 33 42 L 38 48 Z" fill="#7a6d5e"/>
+        <path d="M 42 48 L 47 42 L 45 52 Z" fill="#f5f1e8"/>
+        {/* closed eyes */}
+        <path d="M 32 56 Q 35 58 38 56" stroke="#3a3026" strokeWidth="1.2" fill="none" strokeLinecap="round"/>
+        <path d="M 41 56 Q 44 58 47 56" stroke="#3a3026" strokeWidth="1.2" fill="none" strokeLinecap="round"/>
+        {/* nose */}
+        <path d="M 37 61 L 40 61 L 38.5 63 Z" fill="#d4a5a5"/>
+        {/* tabby patches */}
+        <path d="M 40 50 Q 45 52 48 56 L 46 58 Q 42 54 39 53 Z" fill="#7a6d5e" opacity="0.7"/>
+        {/* paw tucked */}
+        <ellipse cx="55" cy="78" rx="8" ry="5" fill="#f5f1e8"/>
+        {/* z's for sleeping */}
+        <text x="20" y="42" fontFamily="serif" fontSize="8" fill="#7ea16b" fontStyle="italic">z</text>
+        <text x="14" y="34" fontFamily="serif" fontSize="6" fill="#7ea16b" fontStyle="italic">z</text>
+      </svg>
+    )
+  },
+  // Alert white cat — "the watcher" — time-sensitive credits, urgent stuff
+  watcher: {
+    name: 'Luci',
+    role: 'The Watcher',
+    tagline: 'never misses an expiration',
+    svg: (size = 32) => (
+      <svg viewBox="0 0 100 100" width={size} height={size}>
+        {/* alert sitting cat */}
+        <ellipse cx="50" cy="78" rx="20" ry="14" fill="#fafaf7"/>
+        {/* body */}
+        <ellipse cx="50" cy="62" rx="16" ry="20" fill="#fafaf7"/>
+        {/* head */}
+        <circle cx="50" cy="42" r="16" fill="#fafaf7"/>
+        {/* ears */}
+        <path d="M 38 32 L 36 22 L 44 30 Z" fill="#fafaf7"/>
+        <path d="M 62 32 L 64 22 L 56 30 Z" fill="#fafaf7"/>
+        <path d="M 39 31 L 38 26 L 42 30 Z" fill="#e8b5b5"/>
+        <path d="M 61 31 L 62 26 L 58 30 Z" fill="#e8b5b5"/>
+        {/* alert eyes */}
+        <ellipse cx="43" cy="42" rx="2.5" ry="3.5" fill="#7ea16b"/>
+        <ellipse cx="57" cy="42" rx="2.5" ry="3.5" fill="#7ea16b"/>
+        <ellipse cx="43" cy="42" rx="0.8" ry="2.5" fill="#1c3144"/>
+        <ellipse cx="57" cy="42" rx="0.8" ry="2.5" fill="#1c3144"/>
+        {/* small black patch on chin like marshmallow */}
+        <ellipse cx="50" cy="52" rx="2" ry="1.5" fill="#1c3144"/>
+        {/* nose */}
+        <path d="M 48 48 L 52 48 L 50 50 Z" fill="#d4a5a5"/>
+        {/* mouth */}
+        <path d="M 50 50 Q 47 52 45 51" stroke="#3a3026" strokeWidth="0.8" fill="none"/>
+        <path d="M 50 50 Q 53 52 55 51" stroke="#3a3026" strokeWidth="0.8" fill="none"/>
+        {/* whiskers */}
+        <line x1="35" y1="48" x2="42" y2="49" stroke="#3a3026" strokeWidth="0.4"/>
+        <line x1="35" y1="51" x2="42" y2="50" stroke="#3a3026" strokeWidth="0.4"/>
+        <line x1="65" y1="48" x2="58" y2="49" stroke="#3a3026" strokeWidth="0.4"/>
+        <line x1="65" y1="51" x2="58" y2="50" stroke="#3a3026" strokeWidth="0.4"/>
+        {/* paw */}
+        <ellipse cx="45" cy="80" rx="4" ry="3" fill="#fafaf7"/>
+        <ellipse cx="55" cy="80" rx="4" ry="3" fill="#fafaf7"/>
+      </svg>
+    )
+  },
+  // Tuxedo — the "strategist" — the bigger structural stuff, point earning rates
+  strategist: {
+    name: 'Loki',
+    role: 'The Strategist',
+    tagline: 'plays the long game',
+    svg: (size = 32) => (
+      <svg viewBox="0 0 100 100" width={size} height={size}>
+        {/* curled tuxedo cat */}
+        <ellipse cx="50" cy="70" rx="34" ry="20" fill="#1c2530"/>
+        {/* white belly/chest patch */}
+        <ellipse cx="48" cy="74" rx="14" ry="8" fill="#fafaf7"/>
+        {/* head */}
+        <circle cx="38" cy="56" r="15" fill="#1c2530"/>
+        {/* white face mask */}
+        <path d="M 32 58 Q 35 64 38 65 Q 41 64 44 58 Q 42 55 38 55 Q 34 55 32 58 Z" fill="#fafaf7"/>
+        {/* ears */}
+        <path d="M 28 48 L 26 38 L 34 46 Z" fill="#1c2530"/>
+        <path d="M 48 48 L 50 38 L 42 46 Z" fill="#1c2530"/>
+        {/* eyes — narrowed, contemplative */}
+        <path d="M 33 54 Q 36 53 38 54" stroke="#7ea16b" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
+        <path d="M 40 54 Q 43 53 45 54" stroke="#7ea16b" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
+        {/* nose */}
+        <path d="M 37 60 L 40 60 L 38.5 62 Z" fill="#d4a5a5"/>
+        {/* whiskers */}
+        <line x1="25" y1="60" x2="33" y2="61" stroke="#fafaf7" strokeWidth="0.4"/>
+        <line x1="44" y1="61" x2="52" y2="60" stroke="#fafaf7" strokeWidth="0.4"/>
+        {/* paws tucked */}
+        <ellipse cx="60" cy="78" rx="6" ry="4" fill="#fafaf7"/>
+        <ellipse cx="72" cy="76" rx="5" ry="3" fill="#fafaf7"/>
+      </svg>
+    )
+  }
+};
+
+// Tiny paw print decoration
+const PawPrint = ({ size = 14, color = '#7ea16b', opacity = 0.4 }) => (
+  <svg viewBox="0 0 20 20" width={size} height={size} style={{ opacity }}>
+    <ellipse cx="10" cy="13" rx="4" ry="3.5" fill={color}/>
+    <circle cx="5" cy="8" r="1.8" fill={color}/>
+    <circle cx="10" cy="6" r="2" fill={color}/>
+    <circle cx="15" cy="8" r="1.8" fill={color}/>
+  </svg>
+);
+
+// ---------- DATA ----------
+const CARDS = [
+  {
+    id: 'amex_gold',
+    name: 'Amex Gold',
+    issuer: 'American Express',
+    color: '#c9a961',
+    annualFee: 325,
+    cat: 'watcher',
+    benefits: [
+      { id: 'gold_uber', label: '$10 Uber Cash', detail: 'Auto-loads to Uber app on the 1st. Use for Uber rides or Uber Eats in U.S. Expires end of month.', value: 10, cadence: 'monthly', cat: 'watcher' },
+      { id: 'gold_dining', label: '$10 Dining Credit', detail: 'Grubhub, Cheesecake Factory, Five Guys, Buffalo Wild Wings, Wonder, Goldbelly, Wine.com. Enrollment required.', value: 10, cadence: 'monthly', cat: 'watcher' },
+      { id: 'gold_dunkin', label: '$7 Dunkin\' Credit', detail: 'Any U.S. Dunkin\' purchase. In-person, app, or reload. Enrollment required.', value: 7, cadence: 'monthly', cat: 'watcher' },
+      { id: 'gold_resy_h1', label: '$50 Resy Credit (Jan–Jun)', detail: 'Up to $50 in statement credits at 10,000+ U.S. Resy restaurants. Use by June 30. Enrollment required.', value: 50, cadence: 'semiannual_h1', cat: 'watcher' },
+      { id: 'gold_resy_h2', label: '$50 Resy Credit (Jul–Dec)', detail: 'Up to $50 in statement credits at 10,000+ U.S. Resy restaurants. Use by Dec 31. Enrollment required.', value: 50, cadence: 'semiannual_h2', cat: 'watcher' },
+    ],
+    earnings: '4x dining (worldwide) & U.S. supermarkets (up to $25K), 5x prepaid hotels via Amex Travel, 3x flights, 1x else',
+  },
+  {
+    id: 'csp',
+    name: 'Chase Sapphire Preferred',
+    issuer: 'Chase',
+    color: '#1c3144',
+    annualFee: 95,
+    cat: 'strategist',
+    benefits: [
+      { id: 'csp_hotel', label: '$50 Hotel Credit', detail: 'Book any hotel through Chase Travel portal with the CSP. Resets on account anniversary.', value: 50, cadence: 'annual', cat: 'watcher' },
+      { id: 'csp_anniv', label: '10% Anniversary Points Bonus', detail: 'Earn 10% bonus points equal to 10% of total purchases each account anniversary year.', value: 0, cadence: 'annual', passive: true, cat: 'strategist' },
+    ],
+    earnings: '5x Chase Travel, 3x dining/streaming/online groceries, 2x other travel, 1x else',
+  },
+  {
+    id: 'apple',
+    name: 'Apple Card',
+    issuer: 'Goldman Sachs',
+    color: '#596f62',
+    annualFee: 0,
+    cat: 'napper',
+    benefits: [
+      { id: 'apple_pay', label: 'Use Apple Pay (2% Daily Cash)', detail: 'Use Apple Pay everywhere possible. 2% back on all Apple Pay vs 1% on titanium card swipes.', value: 0, cadence: 'monthly', passive: true, cat: 'napper' },
+      { id: 'apple_3pct', label: 'Use at 3% Merchants', detail: 'Apple, Uber, Walgreens, Duane Reade, Nike, Exxon, T-Mobile, Panera, Booking.com, Ace Hardware. 3% back via Apple Pay.', value: 0, cadence: 'monthly', passive: true, cat: 'napper' },
+    ],
+    earnings: '3% at Apple & select merchants (Apple Pay), 2% other Apple Pay, 1% titanium card',
+  },
+  {
+    id: 'target',
+    name: 'Target Circle Card',
+    issuer: 'TD Bank',
+    color: '#a3454a',
+    annualFee: 0,
+    cat: 'napper',
+    benefits: [
+      { id: 'target_5', label: 'Use at Target for 5% off', detail: 'Instant 5% discount on eligible Target purchases (in-store, online, Drive Up, Shipt). Excludes Rx, optical, gift cards.', value: 0, cadence: 'monthly', passive: true, cat: 'napper' },
+      { id: 'target_shipping', label: 'Free Shipping on Target.com', detail: 'Automatic. No minimum order. Use Target.com for non-urgent orders.', value: 0, cadence: 'monthly', passive: true, cat: 'napper' },
+      { id: 'target_returns', label: '30 Extra Days on Returns', detail: 'Track Target purchases — you have 30 additional days beyond standard return window.', value: 0, cadence: 'monthly', passive: true, cat: 'napper' },
+    ],
+    earnings: '5% off Target purchases (instant discount, not points)',
+  },
+  {
+    id: 'flex',
+    name: 'Chase Freedom Flex',
+    issuer: 'Chase',
+    color: '#2d4a5e',
+    annualFee: 0,
+    cat: 'strategist',
+    benefits: [
+      { id: 'flex_q_amazon', label: 'Q2: Amazon (5%)', detail: 'Up to $1,500 in combined Q2 spend across all bonus categories. ACTIVATE on Chase.com before June 14.', value: 75, cadence: 'q2', activation: true, cat: 'strategist' },
+      { id: 'flex_q_wholefoods', label: 'Q2: Whole Foods (5%)', detail: 'Up to $1,500 in combined Q2 bonus spend. ACTIVATE required.', value: 0, cadence: 'q2', activation: true, cat: 'strategist' },
+      { id: 'flex_q_chasetravel', label: 'Q2: Chase Travel (5%)', detail: 'Stacks with the card\'s standard 5% on Chase Travel — effectively 10% back this quarter.', value: 0, cadence: 'q2', activation: true, cat: 'strategist' },
+      { id: 'flex_q_feeding', label: 'Q2: Feeding America donations (5%)', detail: 'Donations to Feeding America earn 5% through June 30.', value: 0, cadence: 'q2', activation: true, cat: 'strategist' },
+      { id: 'flex_dining', label: '3% Dining (year-round)', detail: 'Restaurants including takeout & eligible delivery.', value: 0, cadence: 'monthly', passive: true, cat: 'napper' },
+      { id: 'flex_drugstore', label: '3% Drugstores (year-round)', detail: 'CVS, Walgreens, etc.', value: 0, cadence: 'monthly', passive: true, cat: 'napper' },
+    ],
+    earnings: '5% rotating quarterly (activate!), 5% Chase Travel, 3% dining & drugstores, 1% else',
+  },
+  {
+    id: 'bcp',
+    name: 'Amex Blue Cash Preferred',
+    issuer: 'American Express',
+    color: '#1c3144',
+    annualFee: 95,
+    cat: 'strategist',
+    benefits: [
+      { id: 'bcp_disney', label: '$7 Disney Bundle Credit', detail: 'Monthly statement credit on Disney+, Hulu, or ESPN+ bundle subscription. Enrollment required. (Up to $84/yr)', value: 7, cadence: 'monthly', cat: 'watcher' },
+      { id: 'bcp_groceries', label: 'Use at U.S. Supermarkets (6%)', detail: 'Best grocery rate available. Cap is $6,000/yr → max $360 cash back. Track spend.', value: 0, cadence: 'monthly', passive: true, cat: 'strategist' },
+      { id: 'bcp_streaming', label: 'Pay Streaming Subscriptions (6%)', detail: 'Netflix, Disney+, Hulu, Paramount+, YouTube TV, etc. Set as default payment method.', value: 0, cadence: 'monthly', passive: true, cat: 'napper' },
+      { id: 'bcp_gas', label: 'Use for Gas & Transit (3%)', detail: 'U.S. gas stations, rideshare (Uber/Lyft), taxis, parking, tolls, trains, buses.', value: 0, cadence: 'monthly', passive: true, cat: 'strategist' },
+    ],
+    earnings: '6% U.S. supermarkets (cap $6K), 6% streaming, 3% gas & transit, 1% else',
+  },
+];
+
+// ---------- HELPERS ----------
+function getCurrentPeriod(cadence, date = new Date()) {
+  const y = date.getFullYear();
+  const m = date.getMonth();
+  if (cadence === 'monthly') return `${y}-${String(m+1).padStart(2,'0')}`;
+  if (cadence === 'annual') return `${y}`;
+  if (cadence === 'semiannual_h1') return `${y}-H1`;
+  if (cadence === 'semiannual_h2') return `${y}-H2`;
+  if (cadence === 'q1' || cadence === 'q2' || cadence === 'q3' || cadence === 'q4') return `${y}-${cadence.toUpperCase()}`;
+  return `${y}-${String(m+1).padStart(2,'0')}`;
+}
+
+function isBenefitActiveNow(cadence, date = new Date()) {
+  const m = date.getMonth();
+  if (cadence === 'monthly' || cadence === 'annual') return true;
+  if (cadence === 'semiannual_h1') return m <= 5;
+  if (cadence === 'semiannual_h2') return m >= 6;
+  if (cadence === 'q1') return m <= 2;
+  if (cadence === 'q2') return m >= 3 && m <= 5;
+  if (cadence === 'q3') return m >= 6 && m <= 8;
+  if (cadence === 'q4') return m >= 9;
+  return true;
+}
+
+function daysUntilExpiry(cadence, date = new Date()) {
+  const y = date.getFullYear();
+  const m = date.getMonth();
+  let end;
+  if (cadence === 'monthly') end = new Date(y, m + 1, 0);
+  else if (cadence === 'annual') end = new Date(y, 11, 31);
+  else if (cadence === 'semiannual_h1') end = new Date(y, 5, 30);
+  else if (cadence === 'semiannual_h2') end = new Date(y, 11, 31);
+  else if (cadence === 'q1') end = new Date(y, 2, 31);
+  else if (cadence === 'q2') end = new Date(y, 5, 30);
+  else if (cadence === 'q3') end = new Date(y, 8, 30);
+  else if (cadence === 'q4') end = new Date(y, 11, 31);
+  else return 999;
+  const diff = Math.ceil((end - date) / (1000 * 60 * 60 * 24));
+  return Math.max(0, diff);
+}
+
+function cadenceLabel(cadence) {
+  if (cadence === 'monthly') return 'Monthly';
+  if (cadence === 'annual') return 'Annual';
+  if (cadence === 'semiannual_h1') return 'Jan–Jun';
+  if (cadence === 'semiannual_h2') return 'Jul–Dec';
+  if (cadence.startsWith('q')) return cadence.toUpperCase();
+  return cadence;
+}
+
+// ---------- APP ----------
+export default function CardPerks() {
+  const [usage, setUsage] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [expandedCards, setExpandedCards] = useState(() => new Set(CARDS.map(c => c.id)));
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const result = await window.storage.get('benefit_usage');
+        if (result && result.value) setUsage(JSON.parse(result.value));
+      } catch (e) {}
+      setLoading(false);
+    })();
+  }, []);
+
+  useEffect(() => {
+    if (loading) return;
+    (async () => {
+      try { await window.storage.set('benefit_usage', JSON.stringify(usage)); }
+      catch (e) { console.error('save failed', e); }
+    })();
+  }, [usage, loading]);
+
+  const toggleBenefit = (benefitId, cadence) => {
+    const period = getCurrentPeriod(cadence);
+    const key = `${benefitId}::${period}`;
+    setUsage(prev => {
+      const next = { ...prev };
+      if (next[key]) delete next[key];
+      else next[key] = { usedAt: new Date().toISOString() };
+      return next;
+    });
+  };
+
+  const resetAll = () => {
+    if (confirm('Clear all tracked benefit usage? This cannot be undone.')) setUsage({});
+  };
+
+  const stats = useMemo(() => {
+    let claimedValue = 0;
+    let availableValue = 0;
+    let totalBenefits = 0;
+    let usedBenefits = 0;
+    CARDS.forEach(card => {
+      card.benefits.forEach(b => {
+        if (b.passive) return;
+        if (!isBenefitActiveNow(b.cadence)) return;
+        totalBenefits++;
+        const period = getCurrentPeriod(b.cadence);
+        const used = !!usage[`${b.id}::${period}`];
+        availableValue += b.value;
+        if (used) { claimedValue += b.value; usedBenefits++; }
+      });
+    });
+    return { claimedValue, availableValue, totalBenefits, usedBenefits };
+  }, [usage]);
+
+  const urgentBenefits = useMemo(() => {
+    const list = [];
+    CARDS.forEach(card => {
+      card.benefits.forEach(b => {
+        if (b.passive) return;
+        if (!isBenefitActiveNow(b.cadence)) return;
+        const period = getCurrentPeriod(b.cadence);
+        if (usage[`${b.id}::${period}`]) return;
+        list.push({ card, benefit: b, days: daysUntilExpiry(b.cadence) });
+      });
+    });
+    return list.sort((a, b) => a.days - b.days);
+  }, [usage]);
+
+  const toggleCardExpanded = (id) => {
+    setExpandedCards(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{background:'#1c3144'}}>
+        <div className="text-stone-100 font-mono text-sm tracking-widest">stretching... loading tracker</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen" style={{
+      background: 'linear-gradient(160deg, #1c3144 0%, #2a4456 45%, #596f62 100%)',
+      color: '#f5f1e8',
+      fontFamily: '"Inter", -apple-system, sans-serif'
+    }}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600;9..144,800&family=JetBrains+Mono:wght@400;500;700&display=swap');
+        .font-display { font-family: 'Fraunces', serif; font-optical-sizing: auto; }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+        .grain::before {
+          content: '';
+          position: fixed; inset: 0;
+          background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+          opacity: 0.05; pointer-events: none; z-index: 1;
+        }
+        @keyframes purr {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-2px); }
+        }
+        @keyframes tail-flick {
+          0%, 100% { box-shadow: 0 0 0 0 rgba(126, 161, 107, 0.5); }
+          50% { box-shadow: 0 0 0 8px rgba(126, 161, 107, 0); }
+        }
+        .pulse-urgent { animation: tail-flick 2.4s infinite; }
+        .cat-bob { animation: purr 4s ease-in-out infinite; }
+        .check-anim { animation: pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        @keyframes pop { 0% { transform: scale(0); } 100% { transform: scale(1); } }
+        .paw-trail::after {
+          content: ' 🐾';
+          opacity: 0.3;
+          font-size: 0.7em;
+        }
+      `}</style>
+
+      <div className="grain" />
+
+      <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-10 py-8 sm:py-12">
+
+        {/* HEADER — minimal */}
+        <header className="mb-12 sm:mb-16">
+          <div className="flex items-start justify-between gap-4 mb-8">
+            <div className="min-w-0">
+              <div className="font-mono text-[10px] tracking-[0.3em] mb-3" style={{color: '#a8c098'}}>
+                PERKS · MAY 2026
+              </div>
+              <h1 className="font-display text-3xl sm:text-5xl font-light leading-tight">
+                Card perks,<span className="italic" style={{color:'#a8c098'}}> tracked.</span>
+              </h1>
+            </div>
+            <button
+              onClick={resetAll}
+              className="font-mono text-[10px] tracking-widest hover:opacity-100 transition flex items-center gap-2 flex-shrink-0 mt-2"
+              style={{color: '#a8c098', opacity: 0.6}}
+            >
+              <RefreshCw size={12}/> RESET
+            </button>
+          </div>
+
+          {/* Cat lineup — quiet, single row */}
+          <div className="flex items-center gap-5 sm:gap-8 flex-wrap">
+            {Object.entries(CATS).map(([key, cat]) => (
+              <div key={key} className="flex items-center gap-2">
+                <div className="flex-shrink-0 opacity-90">{cat.svg(28)}</div>
+                <div className="font-mono text-[10px] tracking-wider opacity-70">
+                  <span className="font-display italic text-sm not-italic" style={{color:'#a8c098', fontStyle:'italic'}}>{cat.name}</span>
+                  <span className="opacity-50"> · {cat.role.toLowerCase()}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </header>
+
+        {/* STATS */}
+        <section className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-12">
+          <StatTile
+            label="CLAIMED THIS PERIOD"
+            value={`$${stats.claimedValue}`}
+            sub={`of $${stats.availableValue} available`}
+            tone="sage"
+          />
+          <StatTile
+            label="BENEFITS USED"
+            value={`${stats.usedBenefits}/${stats.totalBenefits}`}
+            sub="active this period"
+          />
+          <StatTile
+            label="EXPIRING SOON"
+            value={urgentBenefits.filter(u => u.days <= 7).length}
+            sub="in next 7 days"
+            tone={urgentBenefits.some(u => u.days <= 7) ? 'alert' : 'neutral'}
+          />
+          <StatTile
+            label="ANNUAL FEES"
+            value={`$${CARDS.reduce((s,c) => s + c.annualFee, 0)}`}
+            sub="across all cards"
+          />
+        </section>
+
+        {/* URGENT */}
+        {urgentBenefits.length > 0 && (
+          <section className="mb-12">
+            <div className="flex items-center gap-3 mb-5">
+              <div className="cat-bob">{CATS.watcher.svg(36)}</div>
+              <div className="flex-1 min-w-0">
+                <h2 className="font-display text-xl sm:text-2xl italic" style={{color: '#a8c098'}}>
+                  Luci says: use these soon
+                </h2>
+                <div className="font-mono text-[10px] tracking-wider opacity-60">EXPIRES THIS MONTH OR QUARTER</div>
+              </div>
+              <div className="hidden sm:block flex-1 h-px" style={{background:'linear-gradient(to right, rgba(168, 192, 152, 0.4), transparent)'}}/>
+            </div>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {urgentBenefits.slice(0, 6).map(({ card, benefit, days }) => (
+                <UrgentCard
+                  key={benefit.id}
+                  card={card}
+                  benefit={benefit}
+                  days={days}
+                  onClaim={() => toggleBenefit(benefit.id, benefit.cadence)}
+                />
+              ))}
+            </div>
+          </section>
+        )}
+
+        {urgentBenefits.length === 0 && (
+          <section className="mb-12 p-6 sm:p-8 rounded-2xl text-center relative overflow-hidden"
+            style={{
+              background:'linear-gradient(135deg, rgba(126, 161, 107, 0.15), rgba(126, 161, 107, 0.03))',
+              border:'1px solid rgba(126, 161, 107, 0.3)'
+            }}>
+            <div className="cat-bob inline-block mb-2">{CATS.napper.svg(54)}</div>
+            <div className="font-display text-xl sm:text-2xl italic" style={{color: '#a8c098'}}>
+              Gatito is purring. All caught up.
+            </div>
+            <div className="font-mono text-[10px] tracking-wider mt-1 opacity-70">EVERY ACTIVE PERK CLAIMED THIS PERIOD</div>
+          </section>
+        )}
+
+        {/* CARDS */}
+        <section>
+          <div className="flex items-center gap-3 mb-6">
+            <CreditCard size={20} style={{color:'#a8c098'}}/>
+            <h2 className="font-display text-xl sm:text-2xl italic">Your wallet</h2>
+            <div className="flex-1 h-px" style={{background:'rgba(168, 192, 152, 0.2)'}}/>
+          </div>
+
+          <div className="space-y-3 sm:space-y-4">
+            {CARDS.map(card => (
+              <CardPanel
+                key={card.id}
+                card={card}
+                expanded={expandedCards.has(card.id)}
+                onToggle={() => toggleCardExpanded(card.id)}
+                usage={usage}
+                onToggleBenefit={toggleBenefit}
+              />
+            ))}
+          </div>
+        </section>
+
+        {/* FOOTER */}
+        <footer className="mt-16 pt-8" style={{borderTop:'1px solid rgba(168, 192, 152, 0.15)'}}>
+          <div className="flex items-start gap-3 mb-4">
+            <div className="opacity-60">{CATS.strategist.svg(32)}</div>
+            <div className="font-mono text-[10px] tracking-wider opacity-60 leading-relaxed flex-1">
+              <span style={{color:'#a8c098'}}>Loki's notes:</span> Benefits data verified via web search May 2026. Always confirm current terms at issuer site. Enrollment required for Amex statement credits (Dining, Resy, Dunkin'). Chase Freedom Flex quarterly categories require activation on chase.com. Your tracker data persists across sessions.
+            </div>
+          </div>
+          <div className="flex items-center justify-center gap-2 opacity-30 pt-4">
+            <PawPrint size={10}/><PawPrint size={10}/><PawPrint size={10}/>
+          </div>
+        </footer>
+      </div>
+    </div>
+  );
+}
+
+// ---------- COMPONENTS ----------
+function StatTile({ label, value, sub, tone = 'neutral' }) {
+  const toneStyles = {
+    sage: { color: '#a8c098', border: 'rgba(126, 161, 107, 0.4)', bg: 'rgba(126, 161, 107, 0.08)' },
+    alert: { color: '#e8b896', border: 'rgba(232, 184, 150, 0.4)', bg: 'rgba(232, 184, 150, 0.08)' },
+    neutral: { color: '#f5f1e8', border: 'rgba(245, 241, 232, 0.15)', bg: 'rgba(245, 241, 232, 0.03)' },
+  }[tone];
+  return (
+    <div
+      className="rounded-xl p-4 sm:p-5 border backdrop-blur-sm"
+      style={{ borderColor: toneStyles.border, background: toneStyles.bg }}
+    >
+      <div className="font-mono text-[9px] sm:text-[10px] tracking-[0.18em] mb-2 opacity-70">{label}</div>
+      <div className="font-display text-3xl sm:text-4xl font-light" style={{ color: toneStyles.color }}>{value}</div>
+      <div className="font-mono text-[10px] opacity-60 mt-1">{sub}</div>
+    </div>
+  );
+}
+
+function UrgentCard({ card, benefit, days, onClaim }) {
+  const urgent = days <= 7;
+  const cat = CATS[benefit.cat] || CATS.watcher;
+  return (
+    <div
+      className={`relative rounded-xl p-4 border transition-all ${urgent ? 'pulse-urgent' : ''}`}
+      style={{
+        borderColor: urgent ? 'rgba(232, 184, 150, 0.5)' : 'rgba(168, 192, 152, 0.2)',
+        background: `linear-gradient(135deg, rgba(245,241,232,0.04), rgba(245,241,232,0.01))`,
+      }}
+    >
+      <div className="flex items-start justify-between mb-2 gap-2">
+        <div className="font-mono text-[9px] tracking-widest" style={{ color: '#a8c098' }}>
+          {card.name.toUpperCase()}
+        </div>
+        <div className={`font-mono text-[9px] tracking-wider px-2 py-0.5 rounded-full flex-shrink-0`}
+          style={{
+            background: urgent ? 'rgba(232, 184, 150, 0.15)' : 'rgba(168, 192, 152, 0.1)',
+            color: urgent ? '#e8b896' : '#a8c098'
+          }}>
+          {days === 0 ? 'TODAY' : `${days}D LEFT`}
+        </div>
+      </div>
+      <div className="flex items-start gap-3 mb-3">
+        <div className="flex-shrink-0 mt-1">{cat.svg(28)}</div>
+        <div className="flex-1 min-w-0">
+          <div className="font-display text-base sm:text-lg leading-tight">{benefit.label}</div>
+        </div>
+      </div>
+      <div className="font-mono text-[10px] mb-4 leading-relaxed opacity-70 line-clamp-2">{benefit.detail}</div>
+      <button
+        onClick={onClaim}
+        className="w-full font-mono text-[10px] tracking-[0.18em] py-2 rounded-md transition hover:scale-[1.02]"
+        style={{
+          border: '1px solid rgba(168, 192, 152, 0.4)',
+          color: '#a8c098',
+          background: 'rgba(126, 161, 107, 0.08)'
+        }}
+      >
+        MARK AS USED 🐾
+      </button>
+    </div>
+  );
+}
+
+function CardPanel({ card, expanded, onToggle, usage, onToggleBenefit }) {
+  const activeBenefits = card.benefits.filter(b => isBenefitActiveNow(b.cadence));
+  const claimableBenefits = activeBenefits.filter(b => !b.passive);
+  const claimed = claimableBenefits.filter(b => usage[`${b.id}::${getCurrentPeriod(b.cadence)}`]).length;
+  const total = claimableBenefits.length;
+  const cardCat = CATS[card.cat] || CATS.strategist;
+  const allClaimed = total > 0 && claimed === total;
+
+  return (
+    <div
+      className="rounded-2xl border overflow-hidden transition-all"
+      style={{
+        borderColor: allClaimed ? 'rgba(126, 161, 107, 0.3)' : 'rgba(245, 241, 232, 0.12)',
+        background: 'linear-gradient(180deg, rgba(245,241,232,0.03), rgba(245,241,232,0.005))'
+      }}
+    >
+      <button
+        onClick={onToggle}
+        className="w-full flex items-center gap-3 sm:gap-4 p-4 sm:p-6 text-left hover:bg-white/[0.02] transition"
+      >
+        {/* Card chip + cat */}
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <div
+            className="hidden sm:flex w-14 h-9 rounded-md items-center justify-center relative overflow-hidden"
+            style={{ background: `linear-gradient(135deg, ${card.color}, ${card.color}cc)` }}
+          >
+            <div className="absolute inset-0 opacity-30" style={{
+              background: 'repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(255,255,255,0.1) 2px, rgba(255,255,255,0.1) 4px)'
+            }}/>
+            <div className="w-5 h-3.5 rounded-sm relative z-10" style={{background: 'rgba(245, 241, 232, 0.5)'}}/>
+          </div>
+          <div className="flex-shrink-0">{cardCat.svg(36)}</div>
+        </div>
+
+        <div className="flex-1 min-w-0">
+          <div className="flex items-baseline gap-2 flex-wrap">
+            <div className="font-display text-lg sm:text-2xl">{card.name}</div>
+            <div className="font-mono text-[9px] sm:text-[10px] tracking-wider opacity-60">
+              {card.issuer.toUpperCase()} · ${card.annualFee}/YR
+            </div>
+          </div>
+          <div className="font-mono text-[10px] sm:text-[11px] mt-1.5 opacity-70 line-clamp-1">{card.earnings}</div>
+        </div>
+
+        <div className="text-right flex-shrink-0">
+          {total > 0 && (
+            <div className="font-mono text-[10px] tracking-wider opacity-70">
+              <span style={{color: allClaimed ? '#a8c098' : '#f5f1e8'}}>{claimed}</span>
+              <span className="opacity-50">/{total}</span> DONE
+            </div>
+          )}
+          <div className="opacity-60 mt-1">
+            {expanded ? <ChevronUp size={16}/> : <ChevronDown size={16}/>}
+          </div>
+        </div>
+      </button>
+
+      {expanded && (
+        <div className="px-4 sm:px-6 pb-5 sm:pb-6 space-y-2 pt-3" style={{borderTop:'1px solid rgba(245, 241, 232, 0.08)'}}>
+          {activeBenefits.map(benefit => {
+            const period = getCurrentPeriod(benefit.cadence);
+            const used = !!usage[`${benefit.id}::${period}`];
+            const days = daysUntilExpiry(benefit.cadence);
+            return (
+              <BenefitRow
+                key={benefit.id}
+                benefit={benefit}
+                used={used}
+                days={days}
+                isActionable={!benefit.passive}
+                onToggle={() => onToggleBenefit(benefit.id, benefit.cadence)}
+              />
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function BenefitRow({ benefit, used, days, isActionable, onToggle }) {
+  const cat = CATS[benefit.cat] || CATS.napper;
+  return (
+    <div
+      className="flex items-start gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg transition-all"
+      style={{
+        background: used ? 'rgba(126, 161, 107, 0.08)' : 'transparent',
+        opacity: used ? 0.7 : 1
+      }}
+    >
+      {/* Checkbox */}
+      {isActionable ? (
+        <button
+          onClick={onToggle}
+          className="flex-shrink-0 w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all mt-0.5"
+          style={{
+            borderColor: used ? '#7ea16b' : 'rgba(245, 241, 232, 0.35)',
+            background: used ? '#7ea16b' : 'transparent'
+          }}
+          aria-label={used ? 'Mark as not used' : 'Mark as used'}
+        >
+          {used && <Check size={14} className="check-anim" strokeWidth={3} style={{color:'#1c3144'}}/>}
+        </button>
+      ) : (
+        <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center mt-0.5">
+          <TrendingUp size={14} style={{color:'rgba(245, 241, 232, 0.4)'}}/>
+        </div>
+      )}
+
+      {/* Cat marker */}
+      <div className="flex-shrink-0 mt-0.5 opacity-90">{cat.svg(28)}</div>
+
+      <div className="flex-1 min-w-0">
+        <div className="flex items-baseline gap-2 flex-wrap">
+          <div className={`font-display text-base sm:text-lg ${used ? 'line-through opacity-60' : ''}`}>
+            {benefit.label}
+          </div>
+          {benefit.value > 0 && (
+            <div className="font-mono text-[10px] tracking-wider" style={{color: '#a8c098'}}>
+              ${benefit.value} VALUE
+            </div>
+          )}
+          {benefit.activation && !used && (
+            <div className="font-mono text-[9px] tracking-widest px-1.5 py-0.5 rounded"
+              style={{color: '#e8b896', background: 'rgba(232, 184, 150, 0.15)'}}>
+              ACTIVATE
+            </div>
+          )}
+        </div>
+        <div className="font-mono text-[10px] sm:text-[11px] mt-1 leading-relaxed opacity-70">
+          {benefit.detail}
+        </div>
+        {isActionable && !used && (
+          <div className="font-mono text-[10px] mt-2 flex items-center gap-2 opacity-60">
+            <Clock size={10}/>
+            <span>{cadenceLabel(benefit.cadence)} · {days === 0 ? 'expires today' : `${days} day${days===1?'':'s'} left`}</span>
+          </div>
+        )}
+        {used && (
+          <div className="font-mono text-[10px] mt-2 flex items-center gap-2" style={{color: '#a8c098'}}>
+            <Check size={10}/>
+            <span>Claimed this period · <span className="italic">{cat.name} approves</span></span>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
