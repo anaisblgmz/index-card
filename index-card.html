@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Card Perks · Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600;9..144,800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --deep-space-blue: #1c3144;
+    --granite: #596f62;
+    --sage-green: #7ea16b;
+    --sage-soft: #a8c098;
+    --cream: #f5f1e8;
+    --peach: #e8b896;
+  }
+
+  html, body {
+    min-height: 100%;
+    background: linear-gradient(160deg, #1c3144 0%, #2a4456 45%, #596f62 100%);
+    color: var(--cream);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .font-display { font-family: 'Fraunces', serif; font-optical-sizing: auto; }
+  .font-mono { font-family: 'JetBrains Mono', monospace; }
+
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+    opacity: 0.05;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .wrap {
+    position: relative;
+    z-index: 2;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 32px 16px;
+  }
+  @media (min-width: 640px) { .wrap { padding: 48px 24px; } }
+  @media (min-width: 1024px) { .wrap { padding: 48px 40px; } }
+
+  /* ---------- HEADER ---------- */
+  .header { margin-bottom: 48px; }
+  @media (min-width: 640px) { .header { margin-bottom: 64px; } }
+  .header-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 32px; }
+  .eyebrow { font-size: 10px; letter-spacing: 0.3em; color: var(--sage-soft); margin-bottom: 12px; }
+  .h1 { font-family: 'Fraunces', serif; font-weight: 300; font-size: clamp(28px, 6vw, 52px); line-height: 1.1; }
+  .h1 .accent { font-style: italic; color: var(--sage-soft); }
+
+  .reset-btn {
+    background: transparent; border: none; cursor: pointer;
+    font-family: 'JetBrains Mono', monospace; font-size: 10px;
+    letter-spacing: 0.15em; color: var(--sage-soft); opacity: 0.6;
+    display: flex; align-items: center; gap: 8px;
+    margin-top: 8px;
+    transition: opacity 0.2s;
+  }
+  .reset-btn:hover { opacity: 1; }
+  .reset-btn svg { width: 12px; height: 12px; }
+
+  .cat-lineup { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
+  @media (min-width: 640px) { .cat-lineup { gap: 32px; } }
+  .cat-lineup-item { display: flex; align-items: center; gap: 8px; }
+  .cat-lineup-item .cat-svg { opacity: 0.9; }
+  .cat-name { font-family: 'Fraunces', serif; font-style: italic; font-size: 14px; color: var(--sage-soft); }
+  .cat-role { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.08em; opacity: 0.5; }
+
+  /* ---------- STATS ---------- */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin-bottom: 48px;
+  }
+  @media (min-width: 640px) {
+    .stats-grid { grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  }
+  .stat {
+    border-radius: 12px;
+    padding: 16px;
+    border: 1px solid;
+    backdrop-filter: blur(8px);
+  }
+  @media (min-width: 640px) { .stat { padding: 20px; } }
+  .stat-label { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.18em; opacity: 0.7; margin-bottom: 8px; }
+  @media (min-width: 640px) { .stat-label { font-size: 10px; } }
+  .stat-value { font-family: 'Fraunces', serif; font-weight: 300; font-size: 30px; line-height: 1; }
+  @media (min-width: 640px) { .stat-value { font-size: 38px; } }
+  .stat-sub { font-family: 'JetBrains Mono', monospace; font-size: 10px; opacity: 0.6; margin-top: 4px; }
+  .stat-sage { border-color: rgba(126, 161, 107, 0.4); background: rgba(126, 161, 107, 0.08); }
+  .stat-sage .stat-value { color: var(--sage-soft); }
+  .stat-alert { border-color: rgba(232, 184, 150, 0.4); background: rgba(232, 184, 150, 0.08); }
+  .stat-alert .stat-value { color: var(--peach); }
+  .stat-neutral { border-color: rgba(245, 241, 232, 0.15); background: rgba(245, 241, 232, 0.03); }
+  .stat-neutral .stat-value { color: var(--cream); }
+
+  /* ---------- SECTIONS ---------- */
+  .section { margin-bottom: 48px; }
+  .section-head { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+  .section-head h2 { font-family: 'Fraunces', serif; font-style: italic; font-weight: 400; font-size: 22px; }
+  @media (min-width: 640px) { .section-head h2 { font-size: 26px; } }
+  .section-head h2.sage { color: var(--sage-soft); }
+  .section-head-text { flex: 1; min-width: 0; }
+  .section-head-text .sub { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.1em; opacity: 0.6; }
+  .section-line { flex: 1; height: 1px; background: linear-gradient(to right, rgba(168, 192, 152, 0.4), transparent); }
+  @media (max-width: 639px) { .section-line { display: none; } }
+  .section-line-flat { flex: 1; height: 1px; background: rgba(168, 192, 152, 0.2); }
+
+  /* ---------- URGENT GRID ---------- */
+  .urgent-grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
+  @media (min-width: 640px) { .urgent-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (min-width: 1024px) { .urgent-grid { grid-template-columns: repeat(3, 1fr); } }
+
+  .urgent-card {
+    position: relative;
+    border-radius: 12px;
+    padding: 16px;
+    border: 1px solid rgba(168, 192, 152, 0.2);
+    background: linear-gradient(135deg, rgba(245,241,232,0.04), rgba(245,241,232,0.01));
+    transition: all 0.2s;
+  }
+  .urgent-card.is-urgent {
+    border-color: rgba(232, 184, 150, 0.5);
+    animation: tail-flick 2.4s infinite;
+  }
+  @keyframes tail-flick {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(126, 161, 107, 0.5); }
+    50% { box-shadow: 0 0 0 8px rgba(126, 161, 107, 0); }
+  }
+  .urgent-card .uc-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+  .uc-cardname { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.18em; color: var(--sage-soft); }
+  .uc-days {
+    font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.1em;
+    padding: 2px 8px; border-radius: 999px; flex-shrink: 0;
+    background: rgba(168, 192, 152, 0.1); color: var(--sage-soft);
+  }
+  .uc-days.is-urgent { background: rgba(232, 184, 150, 0.15); color: var(--peach); }
+  .uc-body { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 12px; }
+  .uc-label { font-family: 'Fraunces', serif; font-size: 17px; line-height: 1.2; }
+  .uc-detail { font-family: 'JetBrains Mono', monospace; font-size: 10px; line-height: 1.5; opacity: 0.7; margin-bottom: 16px;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .uc-cta {
+    width: 100%; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.18em;
+    padding: 8px; border-radius: 6px; cursor: pointer;
+    border: 1px solid rgba(168, 192, 152, 0.4);
+    color: var(--sage-soft);
+    background: rgba(126, 161, 107, 0.08);
+    transition: transform 0.15s;
+  }
+  .uc-cta:hover { transform: scale(1.02); }
+
+  /* ---------- EMPTY STATE ---------- */
+  .empty {
+    margin-bottom: 48px;
+    padding: 32px;
+    border-radius: 16px;
+    text-align: center;
+    border: 1px solid rgba(126, 161, 107, 0.3);
+    background: linear-gradient(135deg, rgba(126, 161, 107, 0.15), rgba(126, 161, 107, 0.03));
+  }
+  .empty .cat-bob { display: inline-block; margin-bottom: 8px; }
+  .empty .title { font-family: 'Fraunces', serif; font-style: italic; font-size: 22px; color: var(--sage-soft); }
+  @media (min-width: 640px) { .empty .title { font-size: 26px; } }
+  .empty .sub { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.1em; opacity: 0.7; margin-top: 4px; }
+
+  /* ---------- CARD PANELS ---------- */
+  .cards-list { display: flex; flex-direction: column; gap: 12px; }
+  @media (min-width: 640px) { .cards-list { gap: 16px; } }
+
+  .card-panel {
+    border-radius: 16px;
+    border: 1px solid rgba(245, 241, 232, 0.12);
+    background: linear-gradient(180deg, rgba(245,241,232,0.03), rgba(245,241,232,0.005));
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+  .card-panel.all-claimed { border-color: rgba(126, 161, 107, 0.3); }
+
+  .card-head {
+    width: 100%;
+    display: flex; align-items: center; gap: 12px;
+    padding: 16px;
+    background: transparent; border: none; cursor: pointer; text-align: left;
+    color: inherit;
+    transition: background 0.15s;
+  }
+  @media (min-width: 640px) { .card-head { padding: 24px; gap: 16px; } }
+  .card-head:hover { background: rgba(255,255,255,0.02); }
+
+  .card-head .chip-and-cat { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+  .card-chip {
+    width: 56px; height: 36px; border-radius: 6px;
+    display: none; align-items: center; justify-content: center;
+    position: relative; overflow: hidden;
+  }
+  @media (min-width: 640px) { .card-chip { display: flex; } }
+  .card-chip::before {
+    content:''; position: absolute; inset: 0; opacity: 0.3;
+    background: repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(255,255,255,0.1) 2px, rgba(255,255,255,0.1) 4px);
+  }
+  .card-chip .gold-square { width: 20px; height: 14px; border-radius: 2px; background: rgba(245, 241, 232, 0.5); position: relative; z-index: 1; }
+
+  .card-info { flex: 1; min-width: 0; }
+  .card-title-row { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+  .card-name { font-family: 'Fraunces', serif; font-size: 18px; }
+  @media (min-width: 640px) { .card-name { font-size: 24px; } }
+  .card-meta { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.12em; opacity: 0.6; }
+  @media (min-width: 640px) { .card-meta { font-size: 10px; } }
+  .card-earnings { font-family: 'JetBrains Mono', monospace; font-size: 10px; opacity: 0.7; margin-top: 6px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  @media (min-width: 640px) { .card-earnings { font-size: 11px; } }
+
+  .card-right { text-align: right; flex-shrink: 0; }
+  .card-count { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.1em; opacity: 0.7; }
+  .card-count .claimed { color: var(--cream); }
+  .card-count .claimed.all { color: var(--sage-soft); }
+  .card-count .total { opacity: 0.5; }
+  .card-chevron { opacity: 0.6; margin-top: 4px; display: inline-flex; }
+
+  .card-body { padding: 12px 16px 20px; border-top: 1px solid rgba(245, 241, 232, 0.08); }
+  @media (min-width: 640px) { .card-body { padding: 12px 24px 24px; } }
+
+  /* ---------- BENEFIT ROW ---------- */
+  .benefit {
+    display: flex; align-items: flex-start; gap: 12px;
+    padding: 12px;
+    border-radius: 8px;
+    transition: all 0.2s;
+  }
+  @media (min-width: 640px) { .benefit { padding: 16px; gap: 16px; } }
+  .benefit.used { background: rgba(126, 161, 107, 0.08); opacity: 0.7; }
+
+  .check-btn {
+    flex-shrink: 0;
+    width: 24px; height: 24px;
+    border-radius: 6px;
+    border: 2px solid rgba(245, 241, 232, 0.35);
+    background: transparent;
+    cursor: pointer;
+    margin-top: 2px;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s;
+  }
+  .check-btn.checked { border-color: var(--sage-green); background: var(--sage-green); }
+  .check-btn svg { width: 14px; height: 14px; color: var(--deep-space-blue); animation: pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+  @keyframes pop { 0% { transform: scale(0); } 100% { transform: scale(1); } }
+
+  .check-placeholder {
+    flex-shrink: 0; width: 24px; height: 24px;
+    display: flex; align-items: center; justify-content: center;
+    margin-top: 2px;
+    opacity: 0.4;
+  }
+  .check-placeholder svg { width: 14px; height: 14px; }
+
+  .benefit-cat { flex-shrink: 0; margin-top: 2px; opacity: 0.9; }
+
+  .benefit-main { flex: 1; min-width: 0; }
+  .benefit-title-row { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+  .benefit-title { font-family: 'Fraunces', serif; font-size: 16px; }
+  @media (min-width: 640px) { .benefit-title { font-size: 18px; } }
+  .benefit-title.used { text-decoration: line-through; opacity: 0.6; }
+  .benefit-value { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.1em; color: var(--sage-soft); }
+  .activation-badge {
+    font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.18em;
+    padding: 2px 6px; border-radius: 4px;
+    color: var(--peach); background: rgba(232, 184, 150, 0.15);
+  }
+  .benefit-detail { font-family: 'JetBrains Mono', monospace; font-size: 10px; line-height: 1.5; opacity: 0.7; margin-top: 4px; }
+  @media (min-width: 640px) { .benefit-detail { font-size: 11px; } }
+  .benefit-meta { font-family: 'JetBrains Mono', monospace; font-size: 10px; margin-top: 8px; display: flex; align-items: center; gap: 8px; opacity: 0.6; }
+  .benefit-meta svg { width: 10px; height: 10px; }
+  .benefit-claimed-note { font-family: 'JetBrains Mono', monospace; font-size: 10px; margin-top: 8px; display: flex; align-items: center; gap: 8px; color: var(--sage-soft); }
+  .benefit-claimed-note svg { width: 10px; height: 10px; }
+  .benefit-claimed-note .approves { font-style: italic; }
+
+  /* ---------- FOOTER ---------- */
+  footer { margin-top: 64px; padding-top: 32px; border-top: 1px solid rgba(168, 192, 152, 0.15); }
+  .footer-note { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 16px; }
+  .footer-note .cat-svg { opacity: 0.6; flex-shrink: 0; }
+  .footer-note .text {
+    font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.05em;
+    opacity: 0.6; line-height: 1.6; flex: 1;
+  }
+  .footer-note .text .name { color: var(--sage-soft); }
+
+  /* ---------- LOADING ---------- */
+  .loading {
+    min-height: 100vh; display: flex; align-items: center; justify-content: center;
+    font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.15em; color: var(--cream);
+  }
+
+  .cat-bob { animation: purr 4s ease-in-out infinite; display: inline-block; }
+  @keyframes purr { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-2px); } }
+</style>
+</head>
+<body>
+
+<div id="app"></div>
+
+<script>
+/* ================================================================
+   DATA
+================================================================ */
+
+// ---------- CAT SVGs (returns HTML string) ----------
+function catSVG(which, size) {
+  size = size || 32;
+  if (which === 'napper') {
+    return `<svg class="cat-svg" viewBox="0 0 100 100" width="${size}" height="${size}">
+      <ellipse cx="50" cy="68" rx="38" ry="22" fill="#f5f1e8"/>
+      <ellipse cx="35" cy="62" rx="14" ry="10" fill="#7a6d5e" opacity="0.5"/>
+      <ellipse cx="62" cy="70" rx="18" ry="12" fill="#f5f1e8"/>
+      <circle cx="38" cy="58" r="14" fill="#f5f1e8"/>
+      <path d="M 30 50 L 33 42 L 38 48 Z" fill="#7a6d5e"/>
+      <path d="M 42 48 L 47 42 L 45 52 Z" fill="#f5f1e8"/>
+      <path d="M 32 56 Q 35 58 38 56" stroke="#3a3026" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+      <path d="M 41 56 Q 44 58 47 56" stroke="#3a3026" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+      <path d="M 37 61 L 40 61 L 38.5 63 Z" fill="#d4a5a5"/>
+      <path d="M 40 50 Q 45 52 48 56 L 46 58 Q 42 54 39 53 Z" fill="#7a6d5e" opacity="0.7"/>
+      <ellipse cx="55" cy="78" rx="8" ry="5" fill="#f5f1e8"/>
+      <text x="20" y="42" font-family="serif" font-size="8" fill="#7ea16b" font-style="italic">z</text>
+      <text x="14" y="34" font-family="serif" font-size="6" fill="#7ea16b" font-style="italic">z</text>
+    </svg>`;
+  }
+  if (which === 'watcher') {
+    return `<svg class="cat-svg" viewBox="0 0 100 100" width="${size}" height="${size}">
+      <ellipse cx="50" cy="78" rx="20" ry="14" fill="#fafaf7"/>
+      <ellipse cx="50" cy="62" rx="16" ry="20" fill="#fafaf7"/>
+      <circle cx="50" cy="42" r="16" fill="#fafaf7"/>
+      <path d="M 38 32 L 36 22 L 44 30 Z" fill="#fafaf7"/>
+      <path d="M 62 32 L 64 22 L 56 30 Z" fill="#fafaf7"/>
+      <path d="M 39 31 L 38 26 L 42 30 Z" fill="#e8b5b5"/>
+      <path d="M 61 31 L 62 26 L 58 30 Z" fill="#e8b5b5"/>
+      <ellipse cx="43" cy="42" rx="2.5" ry="3.5" fill="#7ea16b"/>
+      <ellipse cx="57" cy="42" rx="2.5" ry="3.5" fill="#7ea16b"/>
+      <ellipse cx="43" cy="42" rx="0.8" ry="2.5" fill="#1c3144"/>
+      <ellipse cx="57" cy="42" rx="0.8" ry="2.5" fill="#1c3144"/>
+      <ellipse cx="50" cy="52" rx="2" ry="1.5" fill="#1c3144"/>
+      <path d="M 48 48 L 52 48 L 50 50 Z" fill="#d4a5a5"/>
+      <path d="M 50 50 Q 47 52 45 51" stroke="#3a3026" stroke-width="0.8" fill="none"/>
+      <path d="M 50 50 Q 53 52 55 51" stroke="#3a3026" stroke-width="0.8" fill="none"/>
+      <line x1="35" y1="48" x2="42" y2="49" stroke="#3a3026" stroke-width="0.4"/>
+      <line x1="35" y1="51" x2="42" y2="50" stroke="#3a3026" stroke-width="0.4"/>
+      <line x1="65" y1="48" x2="58" y2="49" stroke="#3a3026" stroke-width="0.4"/>
+      <line x1="65" y1="51" x2="58" y2="50" stroke="#3a3026" stroke-width="0.4"/>
+      <ellipse cx="45" cy="80" rx="4" ry="3" fill="#fafaf7"/>
+      <ellipse cx="55" cy="80" rx="4" ry="3" fill="#fafaf7"/>
+    </svg>`;
+  }
+  // strategist
+  return `<svg class="cat-svg" viewBox="0 0 100 100" width="${size}" height="${size}">
+    <ellipse cx="50" cy="70" rx="34" ry="20" fill="#1c2530"/>
+    <ellipse cx="48" cy="74" rx="14" ry="8" fill="#fafaf7"/>
+    <circle cx="38" cy="56" r="15" fill="#1c2530"/>
+    <path d="M 32 58 Q 35 64 38 65 Q 41 64 44 58 Q 42 55 38 55 Q 34 55 32 58 Z" fill="#fafaf7"/>
+    <path d="M 28 48 L 26 38 L 34 46 Z" fill="#1c2530"/>
+    <path d="M 48 48 L 50 38 L 42 46 Z" fill="#1c2530"/>
+    <path d="M 33 54 Q 36 53 38 54" stroke="#7ea16b" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+    <path d="M 40 54 Q 43 53 45 54" stroke="#7ea16b" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+    <path d="M 37 60 L 40 60 L 38.5 62 Z" fill="#d4a5a5"/>
+    <line x1="25" y1="60" x2="33" y2="61" stroke="#fafaf7" stroke-width="0.4"/>
+    <line x1="44" y1="61" x2="52" y2="60" stroke="#fafaf7" stroke-width="0.4"/>
+    <ellipse cx="60" cy="78" rx="6" ry="4" fill="#fafaf7"/>
+    <ellipse cx="72" cy="76" rx="5" ry="3" fill="#fafaf7"/>
+  </svg>`;
+}
+
+const CATS = {
+  napper:     { name: 'Gatito', role: 'The Napper',     tagline: 'guards the easy wins' },
+  watcher:    { name: 'Luci',   role: 'The Watcher',    tagline: 'never misses an expiration' },
+  strategist: { name: 'Loki',   role: 'The Strategist', tagline: 'plays the long game' }
+};
+
+// ---------- ICONS (Lucide-style inline SVG) ----------
+const ICONS = {
+  check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>',
+  clock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>',
+  refresh: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>',
+  chevronDown: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>',
+  chevronUp: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>',
+  trending: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>',
+  creditCard: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>'
+};
+
+// ---------- CARDS ----------
+const CARDS = [
+  { id:'amex_gold', name:'Amex Gold', issuer:'American Express', color:'#c9a961', annualFee:325, cat:'watcher',
+    earnings:'4x dining (worldwide) & U.S. supermarkets (up to $25K), 5x prepaid hotels via Amex Travel, 3x flights, 1x else',
+    benefits:[
+      { id:'gold_uber',     label:'$10 Uber Cash',         detail:'Auto-loads to Uber app on the 1st. Use for Uber rides or Uber Eats in U.S. Expires end of month.', value:10, cadence:'monthly', cat:'watcher' },
+      { id:'gold_dining',   label:'$10 Dining Credit',     detail:"Grubhub, Cheesecake Factory, Five Guys, Buffalo Wild Wings, Wonder, Goldbelly, Wine.com. Enrollment required.", value:10, cadence:'monthly', cat:'watcher' },
+      { id:'gold_dunkin',   label:"$7 Dunkin' Credit",     detail:"Any U.S. Dunkin' purchase. In-person, app, or reload. Enrollment required.", value:7, cadence:'monthly', cat:'watcher' },
+      { id:'gold_resy_h1',  label:'$50 Resy Credit (Jan–Jun)', detail:'Up to $50 in statement credits at 10,000+ U.S. Resy restaurants. Use by June 30. Enrollment required.', value:50, cadence:'semiannual_h1', cat:'watcher' },
+      { id:'gold_resy_h2',  label:'$50 Resy Credit (Jul–Dec)', detail:'Up to $50 in statement credits at 10,000+ U.S. Resy restaurants. Use by Dec 31. Enrollment required.', value:50, cadence:'semiannual_h2', cat:'watcher' }
+    ]
+  },
+  { id:'csp', name:'Chase Sapphire Preferred', issuer:'Chase', color:'#1c3144', annualFee:95, cat:'strategist',
+    earnings:'5x Chase Travel, 3x dining/streaming/online groceries, 2x other travel, 1x else',
+    benefits:[
+      { id:'csp_hotel', label:'$50 Hotel Credit', detail:'Book any hotel through Chase Travel portal with the CSP. Resets on account anniversary.', value:50, cadence:'annual', cat:'watcher' },
+      { id:'csp_anniv', label:'10% Anniversary Points Bonus', detail:'Earn 10% bonus points equal to 10% of total purchases each account anniversary year.', value:0, cadence:'annual', passive:true, cat:'strategist' }
+    ]
+  },
+  { id:'apple', name:'Apple Card', issuer:'Goldman Sachs', color:'#596f62', annualFee:0, cat:'napper',
+    earnings:'3% at Apple & select merchants (Apple Pay), 2% other Apple Pay, 1% titanium card',
+    benefits:[
+      { id:'apple_pay',  label:'Use Apple Pay (2% Daily Cash)', detail:'Use Apple Pay everywhere possible. 2% back on all Apple Pay vs 1% on titanium card swipes.', value:0, cadence:'monthly', passive:true, cat:'napper' },
+      { id:'apple_3pct', label:'Use at 3% Merchants', detail:'Apple, Uber, Walgreens, Duane Reade, Nike, Exxon, T-Mobile, Panera, Booking.com, Ace Hardware. 3% back via Apple Pay.', value:0, cadence:'monthly', passive:true, cat:'napper' }
+    ]
+  },
+  { id:'target', name:'Target Circle Card', issuer:'TD Bank', color:'#a3454a', annualFee:0, cat:'napper',
+    earnings:'5% off Target purchases (instant discount, not points)',
+    benefits:[
+      { id:'target_5',        label:'Use at Target for 5% off',    detail:'Instant 5% discount on eligible Target purchases (in-store, online, Drive Up, Shipt). Excludes Rx, optical, gift cards.', value:0, cadence:'monthly', passive:true, cat:'napper' },
+      { id:'target_shipping', label:'Free Shipping on Target.com', detail:'Automatic. No minimum order. Use Target.com for non-urgent orders.', value:0, cadence:'monthly', passive:true, cat:'napper' },
+      { id:'target_returns',  label:'30 Extra Days on Returns',    detail:'Track Target purchases — you have 30 additional days beyond standard return window.', value:0, cadence:'monthly', passive:true, cat:'napper' }
+    ]
+  },
+  { id:'flex', name:'Chase Freedom Flex', issuer:'Chase', color:'#2d4a5e', annualFee:0, cat:'strategist',
+    earnings:'5% rotating quarterly (activate!), 5% Chase Travel, 3% dining & drugstores, 1% else',
+    benefits:[
+      { id:'flex_q_amazon',      label:'Q2: Amazon (5%)',                       detail:'Up to $1,500 in combined Q2 spend across all bonus categories. ACTIVATE on Chase.com before June 14.', value:75, cadence:'q2', activation:true, cat:'strategist' },
+      { id:'flex_q_wholefoods',  label:'Q2: Whole Foods (5%)',                  detail:'Up to $1,500 in combined Q2 bonus spend. ACTIVATE required.', value:0, cadence:'q2', activation:true, cat:'strategist' },
+      { id:'flex_q_chasetravel', label:'Q2: Chase Travel (5%)',                 detail:"Stacks with the card's standard 5% on Chase Travel — effectively 10% back this quarter.", value:0, cadence:'q2', activation:true, cat:'strategist' },
+      { id:'flex_q_feeding',     label:'Q2: Feeding America donations (5%)',    detail:'Donations to Feeding America earn 5% through June 30.', value:0, cadence:'q2', activation:true, cat:'strategist' },
+      { id:'flex_dining',        label:'3% Dining (year-round)',                detail:'Restaurants including takeout & eligible delivery.', value:0, cadence:'monthly', passive:true, cat:'napper' },
+      { id:'flex_drugstore',     label:'3% Drugstores (year-round)',            detail:'CVS, Walgreens, etc.', value:0, cadence:'monthly', passive:true, cat:'napper' }
+    ]
+  },
+  { id:'bcp', name:'Amex Blue Cash Preferred', issuer:'American Express', color:'#1c3144', annualFee:95, cat:'strategist',
+    earnings:'6% U.S. supermarkets (cap $6K), 6% streaming, 3% gas & transit, 1% else',
+    benefits:[
+      { id:'bcp_disney',    label:'$7 Disney Bundle Credit',              detail:'Monthly statement credit on Disney+, Hulu, or ESPN+ bundle subscription. Enrollment required. (Up to $84/yr)', value:7, cadence:'monthly', cat:'watcher' },
+      { id:'bcp_groceries', label:'Use at U.S. Supermarkets (6%)',        detail:'Best grocery rate available. Cap is $6,000/yr → max $360 cash back. Track spend.', value:0, cadence:'monthly', passive:true, cat:'strategist' },
+      { id:'bcp_streaming', label:'Pay Streaming Subscriptions (6%)',     detail:'Netflix, Disney+, Hulu, Paramount+, YouTube TV, etc. Set as default payment method.', value:0, cadence:'monthly', passive:true, cat:'napper' },
+      { id:'bcp_gas',       label:'Use for Gas & Transit (3%)',           detail:'U.S. gas stations, rideshare (Uber/Lyft), taxis, parking, tolls, trains, buses.', value:0, cadence:'monthly', passive:true, cat:'strategist' }
+    ]
+  }
+];
+
+/* ================================================================
+   HELPERS
+================================================================ */
+function getCurrentPeriod(cadence, date) {
+  date = date || new Date();
+  const y = date.getFullYear();
+  const m = date.getMonth();
+  if (cadence === 'monthly') return y + '-' + String(m+1).padStart(2,'0');
+  if (cadence === 'annual') return '' + y;
+  if (cadence === 'semiannual_h1') return y + '-H1';
+  if (cadence === 'semiannual_h2') return y + '-H2';
+  if (['q1','q2','q3','q4'].includes(cadence)) return y + '-' + cadence.toUpperCase();
+  return y + '-' + String(m+1).padStart(2,'0');
+}
+
+function isBenefitActiveNow(cadence, date) {
+  date = date || new Date();
+  const m = date.getMonth();
+  if (cadence === 'monthly' || cadence === 'annual') return true;
+  if (cadence === 'semiannual_h1') return m <= 5;
+  if (cadence === 'semiannual_h2') return m >= 6;
+  if (cadence === 'q1') return m <= 2;
+  if (cadence === 'q2') return m >= 3 && m <= 5;
+  if (cadence === 'q3') return m >= 6 && m <= 8;
+  if (cadence === 'q4') return m >= 9;
+  return true;
+}
+
+function daysUntilExpiry(cadence, date) {
+  date = date || new Date();
+  const y = date.getFullYear();
+  const m = date.getMonth();
+  let end;
+  if (cadence === 'monthly') end = new Date(y, m + 1, 0);
+  else if (cadence === 'annual') end = new Date(y, 11, 31);
+  else if (cadence === 'semiannual_h1') end = new Date(y, 5, 30);
+  else if (cadence === 'semiannual_h2') end = new Date(y, 11, 31);
+  else if (cadence === 'q1') end = new Date(y, 2, 31);
+  else if (cadence === 'q2') end = new Date(y, 5, 30);
+  else if (cadence === 'q3') end = new Date(y, 8, 30);
+  else if (cadence === 'q4') end = new Date(y, 11, 31);
+  else return 999;
+  const diff = Math.ceil((end - date) / (1000 * 60 * 60 * 24));
+  return Math.max(0, diff);
+}
+
+function cadenceLabel(cadence) {
+  if (cadence === 'monthly') return 'Monthly';
+  if (cadence === 'annual') return 'Annual';
+  if (cadence === 'semiannual_h1') return 'Jan–Jun';
+  if (cadence === 'semiannual_h2') return 'Jul–Dec';
+  if (cadence.startsWith('q')) return cadence.toUpperCase();
+  return cadence;
+}
+
+function escapeHtml(s) {
+  return String(s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+}
+
+/* ================================================================
+   STATE
+================================================================ */
+const STORAGE_KEY = 'card_perks_usage_v1';
+const EXPANDED_KEY = 'card_perks_expanded_v1';
+
+let usage = {};
+let expandedCards = new Set(CARDS.map(c => c.id));
+
+function loadState() {
+  try {
+    const u = localStorage.getItem(STORAGE_KEY);
+    if (u) usage = JSON.parse(u);
+  } catch(e) {}
+  try {
+    const e = localStorage.getItem(EXPANDED_KEY);
+    if (e) {
+      const arr = JSON.parse(e);
+      if (Array.isArray(arr)) expandedCards = new Set(arr);
+    }
+  } catch(e) {}
+}
+
+function saveUsage() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(usage)); } catch(e) {}
+}
+function saveExpanded() {
+  try { localStorage.setItem(EXPANDED_KEY, JSON.stringify(Array.from(expandedCards))); } catch(e) {}
+}
+
+function toggleBenefit(benefitId, cadence) {
+  const period = getCurrentPeriod(cadence);
+  const key = benefitId + '::' + period;
+  if (usage[key]) delete usage[key];
+  else usage[key] = { usedAt: new Date().toISOString() };
+  saveUsage();
+  render();
+}
+
+function toggleCardExpanded(id) {
+  if (expandedCards.has(id)) expandedCards.delete(id);
+  else expandedCards.add(id);
+  saveExpanded();
+  render();
+}
+
+function resetAll() {
+  if (confirm('Clear all tracked benefit usage? This cannot be undone.')) {
+    usage = {};
+    saveUsage();
+    render();
+  }
+}
+
+/* ================================================================
+   COMPUTED
+================================================================ */
+function computeStats() {
+  let claimedValue = 0, availableValue = 0, totalBenefits = 0, usedBenefits = 0;
+  CARDS.forEach(card => {
+    card.benefits.forEach(b => {
+      if (b.passive) return;
+      if (!isBenefitActiveNow(b.cadence)) return;
+      totalBenefits++;
+      const used = !!usage[b.id + '::' + getCurrentPeriod(b.cadence)];
+      availableValue += b.value;
+      if (used) { claimedValue += b.value; usedBenefits++; }
+    });
+  });
+  return { claimedValue, availableValue, totalBenefits, usedBenefits };
+}
+
+function computeUrgent() {
+  const list = [];
+  CARDS.forEach(card => {
+    card.benefits.forEach(b => {
+      if (b.passive) return;
+      if (!isBenefitActiveNow(b.cadence)) return;
+      if (usage[b.id + '::' + getCurrentPeriod(b.cadence)]) return;
+      list.push({ card: card, benefit: b, days: daysUntilExpiry(b.cadence) });
+    });
+  });
+  return list.sort((a, b) => a.days - b.days);
+}
+
+/* ================================================================
+   RENDER
+================================================================ */
+function renderHeader() {
+  const catItems = Object.entries(CATS).map(([key, cat]) => `
+    <div class="cat-lineup-item">
+      ${catSVG(key, 28)}
+      <div>
+        <span class="cat-name">${cat.name}</span>
+        <span class="cat-role"> · ${cat.role.toLowerCase()}</span>
+      </div>
+    </div>
+  `).join('');
+
+  return `
+    <header class="header">
+      <div class="header-top">
+        <div>
+          <div class="font-mono eyebrow">PERKS · MAY 2026</div>
+          <h1 class="h1">Card perks,<span class="accent"> tracked.</span></h1>
+        </div>
+        <button class="reset-btn" onclick="resetAll()">
+          ${ICONS.refresh} RESET
+        </button>
+      </div>
+      <div class="cat-lineup">${catItems}</div>
+    </header>
+  `;
+}
+
+function renderStats(stats, urgent) {
+  const urgentSoon = urgent.filter(u => u.days <= 7).length;
+  const annualFees = CARDS.reduce((s, c) => s + c.annualFee, 0);
+  return `
+    <section class="stats-grid">
+      <div class="stat stat-sage">
+        <div class="stat-label">CLAIMED THIS PERIOD</div>
+        <div class="stat-value">$${stats.claimedValue}</div>
+        <div class="stat-sub">of $${stats.availableValue} available</div>
+      </div>
+      <div class="stat stat-neutral">
+        <div class="stat-label">BENEFITS USED</div>
+        <div class="stat-value">${stats.usedBenefits}/${stats.totalBenefits}</div>
+        <div class="stat-sub">active this period</div>
+      </div>
+      <div class="stat ${urgentSoon > 0 ? 'stat-alert' : 'stat-neutral'}">
+        <div class="stat-label">EXPIRING SOON</div>
+        <div class="stat-value">${urgentSoon}</div>
+        <div class="stat-sub">in next 7 days</div>
+      </div>
+      <div class="stat stat-neutral">
+        <div class="stat-label">ANNUAL FEES</div>
+        <div class="stat-value">$${annualFees}</div>
+        <div class="stat-sub">across all cards</div>
+      </div>
+    </section>
+  `;
+}
+
+function renderUrgent(urgent) {
+  if (urgent.length === 0) {
+    return `
+      <section class="empty">
+        <div class="cat-bob">${catSVG('napper', 54)}</div>
+        <div class="title">Gatito is purring. All caught up.</div>
+        <div class="sub">EVERY ACTIVE PERK CLAIMED THIS PERIOD</div>
+      </section>
+    `;
+  }
+  const cards = urgent.slice(0, 6).map(({ card, benefit, days }) => {
+    const isUrgent = days <= 7;
+    const cat = benefit.cat || 'watcher';
+    const dayLabel = days === 0 ? 'TODAY' : days + 'D LEFT';
+    return `
+      <div class="urgent-card ${isUrgent ? 'is-urgent' : ''}">
+        <div class="uc-top">
+          <div class="uc-cardname">${escapeHtml(card.name.toUpperCase())}</div>
+          <div class="uc-days ${isUrgent ? 'is-urgent' : ''}">${dayLabel}</div>
+        </div>
+        <div class="uc-body">
+          ${catSVG(cat, 28)}
+          <div class="uc-label">${escapeHtml(benefit.label)}</div>
+        </div>
+        <div class="uc-detail">${escapeHtml(benefit.detail)}</div>
+        <button class="uc-cta" onclick="toggleBenefit('${benefit.id}', '${benefit.cadence}')">
+          MARK AS USED 🐾
+        </button>
+      </div>
+    `;
+  }).join('');
+
+  return `
+    <section class="section">
+      <div class="section-head">
+        <div class="cat-bob">${catSVG('watcher', 36)}</div>
+        <div class="section-head-text">
+          <h2 class="sage">Luci says: use these soon</h2>
+          <div class="sub">EXPIRES THIS MONTH OR QUARTER</div>
+        </div>
+        <div class="section-line"></div>
+      </div>
+      <div class="urgent-grid">${cards}</div>
+    </section>
+  `;
+}
+
+function renderBenefitRow(benefit) {
+  const period = getCurrentPeriod(benefit.cadence);
+  const used = !!usage[benefit.id + '::' + period];
+  const days = daysUntilExpiry(benefit.cadence);
+  const isActionable = !benefit.passive;
+  const cat = CATS[benefit.cat] || CATS.napper;
+
+  const checkbox = isActionable
+    ? `<button class="check-btn ${used ? 'checked' : ''}" onclick="toggleBenefit('${benefit.id}', '${benefit.cadence}')" aria-label="${used ? 'Mark as not used' : 'Mark as used'}">
+         ${used ? ICONS.check : ''}
+       </button>`
+    : `<div class="check-placeholder">${ICONS.trending}</div>`;
+
+  const valueBadge = benefit.value > 0 ? `<span class="benefit-value">$${benefit.value} VALUE</span>` : '';
+  const activationBadge = (benefit.activation && !used) ? `<span class="activation-badge">ACTIVATE</span>` : '';
+
+  const footerLine = used
+    ? `<div class="benefit-claimed-note">${ICONS.check}<span>Claimed this period · <span class="approves">${cat.name} approves</span></span></div>`
+    : (isActionable
+        ? `<div class="benefit-meta">${ICONS.clock}<span>${cadenceLabel(benefit.cadence)} · ${days === 0 ? 'expires today' : days + ' day' + (days===1?'':'s') + ' left'}</span></div>`
+        : '');
+
+  return `
+    <div class="benefit ${used ? 'used' : ''}">
+      ${checkbox}
+      <div class="benefit-cat">${catSVG(benefit.cat || 'napper', 28)}</div>
+      <div class="benefit-main">
+        <div class="benefit-title-row">
+          <span class="benefit-title ${used ? 'used' : ''}">${escapeHtml(benefit.label)}</span>
+          ${valueBadge}
+          ${activationBadge}
+        </div>
+        <div class="benefit-detail">${escapeHtml(benefit.detail)}</div>
+        ${footerLine}
+      </div>
+    </div>
+  `;
+}
+
+function renderCardPanel(card) {
+  const expanded = expandedCards.has(card.id);
+  const activeBenefits = card.benefits.filter(b => isBenefitActiveNow(b.cadence));
+  const claimable = activeBenefits.filter(b => !b.passive);
+  const claimed = claimable.filter(b => usage[b.id + '::' + getCurrentPeriod(b.cadence)]).length;
+  const total = claimable.length;
+  const allClaimed = total > 0 && claimed === total;
+
+  const countLabel = total > 0
+    ? `<div class="card-count"><span class="claimed ${allClaimed ? 'all' : ''}">${claimed}</span><span class="total">/${total}</span> DONE</div>`
+    : '';
+
+  const bodyContent = expanded
+    ? `<div class="card-body">${activeBenefits.map(renderBenefitRow).join('')}</div>`
+    : '';
+
+  return `
+    <div class="card-panel ${allClaimed ? 'all-claimed' : ''}">
+      <button class="card-head" onclick="toggleCardExpanded('${card.id}')">
+        <div class="chip-and-cat">
+          <div class="card-chip" style="background: linear-gradient(135deg, ${card.color}, ${card.color}cc);">
+            <div class="gold-square"></div>
+          </div>
+          ${catSVG(card.cat, 36)}
+        </div>
+        <div class="card-info">
+          <div class="card-title-row">
+            <span class="card-name">${escapeHtml(card.name)}</span>
+            <span class="card-meta">${escapeHtml(card.issuer.toUpperCase())} · $${card.annualFee}/YR</span>
+          </div>
+          <div class="card-earnings">${escapeHtml(card.earnings)}</div>
+        </div>
+        <div class="card-right">
+          ${countLabel}
+          <div class="card-chevron">${expanded ? ICONS.chevronUp : ICONS.chevronDown}</div>
+        </div>
+      </button>
+      ${bodyContent}
+    </div>
+  `;
+}
+
+function renderCards() {
+  return `
+    <section class="section">
+      <div class="section-head">
+        <span style="color: var(--sage-soft);">${ICONS.creditCard}</span>
+        <h2>Your wallet</h2>
+        <div class="section-line-flat"></div>
+      </div>
+      <div class="cards-list">
+        ${CARDS.map(renderCardPanel).join('')}
+      </div>
+    </section>
+  `;
+}
+
+function renderFooter() {
+  return `
+    <footer>
+      <div class="footer-note">
+        ${catSVG('strategist', 32)}
+        <div class="text">
+          <span class="name">Loki's notes:</span> Benefits data verified via web search May 2026. Always confirm current terms at issuer site. Enrollment required for Amex statement credits (Dining, Resy, Dunkin'). Chase Freedom Flex quarterly categories require activation on chase.com. Your tracker data is saved to your browser and persists across sessions.
+        </div>
+      </div>
+    </footer>
+  `;
+}
+
+function render() {
+  const stats = computeStats();
+  const urgent = computeUrgent();
+  document.getElementById('app').innerHTML = `
+    <div class="wrap">
+      ${renderHeader()}
+      ${renderStats(stats, urgent)}
+      ${renderUrgent(urgent)}
+      ${renderCards()}
+      ${renderFooter()}
+    </div>
+  `;
+}
+
+// boot
+loadState();
+render();
+</script>
+
+</body>
+</html>
